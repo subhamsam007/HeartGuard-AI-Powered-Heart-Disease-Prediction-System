@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from pathlib import Path
 
 # Set page configuration
 st.set_page_config(
@@ -9,6 +10,22 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Resolve asset paths relative to this file
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_DIR = BASE_DIR / "models"
+MODEL_PATH = MODEL_DIR / "KNN_heart.pkl"
+SCALER_PATH = MODEL_DIR / "scaler.pkl"
+COLUMNS_PATH = MODEL_DIR / "columns.pkl"
+
+if not MODEL_PATH.exists() or not SCALER_PATH.exists() or not COLUMNS_PATH.exists():
+    missing = [str(path.relative_to(BASE_DIR)) for path in (MODEL_PATH, SCALER_PATH, COLUMNS_PATH) if not path.exists()]
+    st.error(
+        "The app cannot start because the following model files are missing:\n"
+        + "\n".join(f"- {path}" for path in missing)
+        + "\n\nPlease add these files under the `models/` directory."
+    )
+    st.stop()
 
 # Custom CSS for modern look
 st.markdown("""
@@ -78,9 +95,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Load saved model, scaler, and expected columns
-model = joblib.load(".venv/models/KNN_heart.pkl")
-scaler = joblib.load(".venv/models/scaler.pkl")
-expected_columns = joblib.load(".venv/models/columns.pkl")
+model = joblib.load(MODEL_PATH)
+scaler = joblib.load(SCALER_PATH)
+expected_columns = joblib.load(COLUMNS_PATH)
 
 # Main content
 st.markdown('<div class="main-header">🫀 Heart Disease Prediction</div>', unsafe_allow_html=True)
